@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,maximum-scale=2">
+    <link rel="stylesheet" type="text/css" media="screen" href="/WebSocketChannel/assets/css/style.css?v=b83076a9e2f704212667ef8bd1acd4a80b5e8d2e">
+
+<!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>WebSocketChannel | High-performance System.Threading.Channels API adapter for System.Net.WebSockets</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="WebSocketChannel" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="High-performance System.Threading.Channels API adapter for System.Net.WebSockets" />
+<meta property="og:description" content="High-performance System.Threading.Channels API adapter for System.Net.WebSockets" />
+<meta property="og:site_name" content="WebSocketChannel" />
+<script type="application/ld+json">
+{"@type":"WebSite","url":"/WebSocketChannel/","headline":"WebSocketChannel","description":"High-performance System.Threading.Channels API adapter for System.Net.WebSockets","name":"WebSocketChannel","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/devlooped/WebSocketChannel">View on GitHub</a>
+
+          <h1 id="project_title">WebSocketChannel</h1>
+          <h2 id="project_tagline">High-performance System.Threading.Channels API adapter for System.Net.WebSockets</h2>
+
+          
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1 id="-websocketchannel"><img src="https://raw.githubusercontent.com/devlooped/WebSocketChannel/main/assets/img/icon.png" alt="Icon" /> WebSocketChannel</h1>
+
+<p>High-performance <a href="https://devblogs.microsoft.com/dotnet/an-introduction-to-system-threading-channels/">System.Threading.Channels</a> API adapter for System.Net.WebSockets</p>
+
+<p><a href="https://www.nuget.org/packages/WebSocketChannel"><img src="https://img.shields.io/nuget/v/WebSocketChannel.svg?color=royalblue" alt="Version" /></a>
+<a href="https://www.nuget.org/packages/WebSocketChannel"><img src="https://img.shields.io/nuget/dt/WebSocketChannel.svg?color=green" alt="Downloads" /></a>
+<a href="https://github.com/devlooped/WebSocketChannel/blob/main/license.txt"><img src="https://img.shields.io/github/license/devlooped/WebSocketChannel.svg?color=blue" alt="License" /></a>
+<a href="https://github.com/devlooped/WebSocketChannel/actions"><img src="https://github.com/devlooped/WebSocketChannel/workflows/build/badge.svg?branch=main" alt="Build" /></a></p>
+
+<h1 id="usage">Usage</h1>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">var</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">ClientWebSocket</span><span class="p">();</span>
+<span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="nf">ConnectAsync</span><span class="p">(</span><span class="n">serverUri</span><span class="p">,</span> <span class="n">CancellationToken</span><span class="p">.</span><span class="n">None</span><span class="p">);</span>
+
+<span class="n">Channel</span><span class="p">&lt;</span><span class="n">ReadOnlyMemory</span><span class="p">&lt;</span><span class="kt">byte</span><span class="p">&gt;&gt;</span> <span class="n">channel</span> <span class="p">=</span> <span class="n">client</span><span class="p">.</span><span class="nf">CreateChannel</span><span class="p">();</span>
+
+<span class="k">await</span> <span class="n">channel</span><span class="p">.</span><span class="n">Writer</span><span class="p">.</span><span class="nf">WriteAsync</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetBytes</span><span class="p">(</span><span class="s">"hello"</span><span class="p">).</span><span class="nf">AsMemory</span><span class="p">());</span>
+
+<span class="c1">// Read single message when it arrives</span>
+<span class="n">ReadOnlyMemory</span><span class="p">&lt;</span><span class="kt">byte</span><span class="p">&gt;</span> <span class="n">response</span> <span class="p">=</span> <span class="k">await</span> <span class="n">channel</span><span class="p">.</span><span class="n">Reader</span><span class="p">.</span><span class="nf">ReadAsync</span><span class="p">();</span>
+
+<span class="c1">// Read all messages while underlying websocket is open</span>
+<span class="k">await</span> <span class="k">foreach</span> <span class="p">(</span><span class="kt">var</span> <span class="n">item</span> <span class="k">in</span> <span class="n">channel</span><span class="p">.</span><span class="n">Reader</span><span class="p">.</span><span class="nf">ReadAllAsync</span><span class="p">())</span>
+<span class="p">{</span>
+    <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetString</span><span class="p">(</span><span class="n">item</span><span class="p">.</span><span class="n">Span</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="c1">// Completing the writer closes the underlying websocket cleanly</span>
+<span class="n">channel</span><span class="p">.</span><span class="n">Writer</span><span class="p">.</span><span class="nf">Complete</span><span class="p">();</span>
+
+<span class="c1">// Can also complete reporting an error for the remote party</span>
+<span class="n">channel</span><span class="p">.</span><span class="n">Writer</span><span class="p">.</span><span class="nf">Complete</span><span class="p">(</span><span class="k">new</span> <span class="nf">InvalidOperationException</span><span class="p">(</span><span class="s">"Bad format"</span><span class="p">));</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">WebSocketChannel</code> can also be used on the server. The following example is basically 
+taken from the documentation on <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/websockets?view=aspnetcore-5.0#configure-the-middleware">WebSockets in ASP.NET Core</a> 
+and adapted to use a <code class="language-plaintext highlighter-rouge">WebSocketChannel</code> to echo messages to the client:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">app</span><span class="p">.</span><span class="nf">Use</span><span class="p">(</span><span class="k">async</span> <span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">next</span><span class="p">)</span> <span class="p">=&gt;</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">Path</span> <span class="p">==</span> <span class="s">"/ws"</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">WebSockets</span><span class="p">.</span><span class="n">IsWebSocketRequest</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">using</span> <span class="nn">var</span> <span class="n">webSocket</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">WebSockets</span><span class="p">.</span><span class="nf">AcceptWebSocketAsync</span><span class="p">();</span>
+            <span class="kt">var</span> <span class="n">channel</span> <span class="p">=</span> <span class="n">WebSocketChannel</span><span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="n">webSocket</span><span class="p">);</span>
+            <span class="k">try</span>
+            <span class="p">{</span>
+                <span class="k">await</span> <span class="k">foreach</span> <span class="p">(</span><span class="kt">var</span> <span class="n">item</span> <span class="k">in</span> <span class="n">channel</span><span class="p">.</span><span class="n">Reader</span><span class="p">.</span><span class="nf">ReadAllAsync</span><span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">RequestAborted</span><span class="p">))</span>
+                <span class="p">{</span>
+                    <span class="k">await</span> <span class="n">channel</span><span class="p">.</span><span class="n">Writer</span><span class="p">.</span><span class="nf">WriteAsync</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">context</span><span class="p">.</span><span class="n">RequestAborted</span><span class="p">);</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="k">catch</span> <span class="p">(</span><span class="n">OperationCanceledException</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="k">try</span>
+                <span class="p">{</span>
+                    <span class="k">await</span> <span class="n">webSocket</span><span class="p">.</span><span class="nf">CloseOutputAsync</span><span class="p">(</span><span class="n">WebSocketCloseStatus</span><span class="p">.</span><span class="n">NormalClosure</span><span class="p">,</span> <span class="k">null</span><span class="p">,</span> <span class="k">default</span><span class="p">);</span>
+                <span class="p">}</span>
+                <span class="k">catch</span> <span class="p">{</span> <span class="p">}</span> <span class="c1">// Best effort to try closing cleanly. Client may be entirely gone.</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+            <span class="n">context</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">StatusCode</span> <span class="p">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">BadRequest</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="k">await</span> <span class="nf">next</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h1 id="installation">Installation</h1>
+
+<p>This project can be used either as a regular nuget package:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;PackageReference Include="WebSocketChannel" Version="*" /&gt;
+</code></pre></div></div>
+
+<p>Or alternatively, referenced directly as a source-only dependency using <a href="https://www.nuget.org/packages/dotnet-file">dotnet-file</a>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; dotnet file add https://github.com/devlooped/WebSocketChannel/blob/main/src/WebSocketChannel/WebSocketChannel.cs
+&gt; dotnet file add https://github.com/devlooped/WebSocketChannel/blob/main/src/WebSocketChannel/WebSocketExtensions.cs
+</code></pre></div></div>
+
+<p>It’s also possible to specify a desired target location for the referenced source files, such as:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; dotnet file add https://github.com/devlooped/WebSocketChannel/blob/main/src/WebSocketChannel/WebSocketChannel.cs src/MyProject/External/.
+&gt; dotnet file add https://github.com/devlooped/WebSocketChannel/blob/main/src/WebSocketChannel/WebSocketExtensions.cs src/MyProject/External/.
+</code></pre></div></div>
+
+<p>When referenced as loose source files, it’s easy to also get automated PRs when the upstream files change, 
+as in the <a href="https://github.com/devlooped/dotnet-file/blob/main/.github/workflows/dotnet-file.yml">dotnet-file.yml</a> workflow that 
+keeps the repository up to date with a template. See also <a href="https://dotnetconfig.org">dotnet-config</a>, which is used to 
+for the <code class="language-plaintext highlighter-rouge">dotnet-file</code> configuration settings that tracks all this.</p>
+
+<h1 id="dogfooding">Dogfooding</h1>
+
+<p><a href="https://pkg.kzu.io/index.json"><img src="https://img.shields.io/endpoint?url=https://shields.kzu.io/vpre/WebSocketChannel/main&amp;label=nuget.ci&amp;color=brightgreen" alt="CI Version" /></a>
+<a href="https://github.com/devlooped/WebSocketChannel/actions"><img src="https://github.com/devlooped/WebSocketChannel/workflows/build/badge.svg?branch=main" alt="Build" /></a></p>
+
+<p>We also produce CI packages from branches and pull requests so you can dogfood builds as quickly as they are produced.</p>
+
+<p>The CI feed is <code class="language-plaintext highlighter-rouge">https://pkg.kzu.io/index.json</code>.</p>
+
+<p>The versioning scheme for packages is:</p>
+
+<ul>
+  <li>PR builds: <em>42.42.42-pr</em><code class="language-plaintext highlighter-rouge">[NUMBER]</code></li>
+  <li>Branch builds: <em>42.42.42-</em><code class="language-plaintext highlighter-rouge">[BRANCH]</code>.<code class="language-plaintext highlighter-rouge">[COMMITS]</code></li>
+</ul>
+
+<h2 id="sponsors">Sponsors</h2>
+
+<p><a href="https://github.com/sponsors/devlooped"><img src="https://raw.githubusercontent.com/devlooped/oss/main/assets/images/sponsors.svg" alt="sponsored" /></a> <a href="https://github.com/clarius"><img src="https://raw.githubusercontent.com/clarius/branding/main/logo/byclarius.svg" alt="clarius" /></a><a href="https://github.com/clarius"><img src="https://raw.githubusercontent.com/clarius/branding/main/logo/logo.svg" alt="clarius" /></a></p>
+
+<p><em><a href="https://github.com/sponsors/devlooped">get mentioned here too</a>!</em></p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        
+        <p class="copyright">WebSocketChannel maintained by <a href="https://github.com/devlooped">devlooped</a></p>
+        
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+  </body>
+</html>
